@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pocket Tracker - Login</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      background-image: url('home.jpg');
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      width: 320px;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 32px;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .tagline {
+      font-size: 14px;
+      color: #ffcc00;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+    }
+    button {
+      width: 95%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      background: #2196F3;
+      color: white;
+    }
+    button:hover {
+      background: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Pocket Tracker</h1>
+    <p class="tagline">Your Monthly Friend</p>
+    <input type="text" id="username" placeholder="Enter Username">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="login()">Login</button>
+    <button onclick="createAccount()">Create Account</button>
+  </div>
+
+  <script>
+    function createAccount() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (username && password) {
+        localStorage.setItem("user", JSON.stringify({ username, password }));
+        alert("Account created! You can now log in.");
+      } else {
+        alert("Please enter both username and password.");
+      }
+    }
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (user && user.username === username && user.password === password) {
+        window.location.href = "app.html";
+      } else {
+        alert("Invalid login details.");
+      }
+    }
+  </script>
+</body>
+</html>
