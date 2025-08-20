@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pocket Tracker - App</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-image: url('app.jpg');
+  background-size: cover;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+h1 { margin: 15px; color: #00e5ff; }
+.container {
+  background: rgba(0, 0, 0, 0.75);
+  padding: 15px;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 900px;
+  margin: 20px auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+h3 { margin: 10px 0; color: #ffd54f; }
+input, select {
+  width: 180px;
+  padding: 8px;
+  margin: 5px;
+  border: 1px solid #00e5ff;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: rgba(0,0,0,0.6);
+  color: #fff;
+}
+input::placeholder, select option { color: #ccc; }
+button {
+  background: #00e5ff;
+  color: #000;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 5px;
+  font-weight: bold;
+  border: none;
+}
+button:hover { background: #00bcd4; color: #fff; }
+table {
+  margin: 10px auto;
+  border-collapse: collapse;
+  width: 95%;
+  background: rgba(0,0,0,0.6);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+th, td { padding: 6px; border: 1px solid #444; }
+th { background: #333; }
+tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+.chart-box {
+  margin-top: 15px;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid #00e5ff;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0px 0px 15px rgba(0,229,255,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+canvas { width: 100% !important; max-width: 250px !important; height: 180px !important; }
+@media (min-width: 600px) { canvas { max-width: 350px !important; height: 220px !important; } }
+.delete-btn {
+  background: crimson;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.delete-btn:hover { background: darkred; }
+.summary-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.summary { text-align: left; width: 48%; color: #fff; margin-bottom:10px; }
+.summary table { width: 100%; border-collapse: collapse; }
+.summary th, .summary td { padding: 4px; font-size: 0.85rem; border: 1px solid #555; }
+.summary th { background: #444; }
+</style>
+</head>
+<body>
+<h1>Pocket Tracker</h1>
+<div class="container">
+
+  <!-- Income Form -->
+  <h3>Add Income</h3>
+  <input type="text" id="incomeName" placeholder="Income Source">
+  <input type="number" id="incomeAmount" placeholder="Amount">
+  <input type="month" id="incomeMonth">
+  <button onclick="addIncome()">Add Income</button>
+
+  <!-- Expense Form -->
+  <h3>Add Expense</h3>
+  <input type="text" id="expenseName" placeholder="Expense Name">
+  <select id="expenseCategory">
+    <option>Food</option>
+    <option>Transport</option>
+    <option>Shopping</option>
+    <option>Entertainment</option>
+    <option>Other</option>
+  </select>
+  <select id="expenseType">
+    <option>Cash</option>
+    <option>Card</option>
+    <option>UPI</option>
+  </select>
+  <input type="number" id="expenseAmount" placeholder="Amount">
+  <input type="month" id="expenseMonth">
+  <button onclick="addExpense()">Add Expense</button>
+
+  <!-- Summary Side by Side -->
+  <h3>Monthly Summary</h3>
+  <div class="summary-container">
+    <div class="summary" id="expenseSummary"></div>
+    <div class="summary" id="incomeSummary"></div>
+  </div>
+
+  <!-- Expenses Table -->
+  <h3>Expenses Table</h3>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Name</th><th>Category</th><th>Type</th><th>Amount</th><th>Month-Year</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Chart Type -->
+  <h3>Visualize Data</h3>
+  <select id="chartType">
+    <option value="bar">Bar Chart</option>
+    <option value="pie">Pie Chart</option>
+    <option value="line">Line Chart</option>
+    <option value="doughnut">Doughnut Chart</option>
+  </select>
+
+  <!-- Chart -->
+  <div class="chart-box">
+    <canvas id="expenseChart"></canvas>
+  </div>
+</div>
+
+<script>
+let incomes = JSON.parse(localStorage.getItem("incomes")) || [];
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let chart;
+
+const chartTypeSelect = document.getElementById("chartType");
+chartTypeSelect.addEventListener("change", renderChart);
+
+function addIncome(){
+  const name=document.getElementById("incomeName").value;
+  const amount=parseFloat(document.getElementById("incomeAmount").value);
+  const month=document.getElementById("incomeMonth").value;
+  if(name && amount && month){
+    incomes.push({name, amount, month});
+    localStorage.setItem("incomes", JSON.stringify(incomes));
+    document.getElementById("incomeName").value="";
+    document.getElementById("incomeAmount").value="";
+    document.getElementById("incomeMonth").value="";
+  }
+  renderSummary(); renderChart();
+}
+
+function addExpense(){
+  const name=document.getElementById("expenseName").value;
+  const amount=parseFloat(document.getElementById("expenseAmount").value);
+  const category=document.getElementById("expenseCategory").value;
+  const type=document.getElementById("expenseType").value;
+  const month=document.getElementById("expenseMonth").value;
+  if(name && amount && month){
+    expenses.push({name, category, type, amount, month});
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+    document.getElementById("expenseName").value="";
+    document.getElementById("expenseAmount").value="";
+    document.getElementById("expenseMonth").value="";
+  }
+  renderTable(); renderSummary(); renderChart();
+}
+
+function deleteExpense(index){
+  expenses.splice(index,1);
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+  renderTable(); renderSummary(); renderChart();
+}
+
+function renderTable(){
+  const tbody=document.querySelector("#dataTable tbody");
+  tbody.innerHTML="";
+  expenses.forEach((e,i)=>{
+    tbody.innerHTML+=`<tr>
+      <td>${e.name}</td><td>${e.category}</td><td>${e.type}</td><td>${e.amount}</td><td>${e.month}</td>
+      <td><button class="delete-btn" onclick="deleteExpense(${i})">Delete</button></td>
+    </tr>`;
+  });
+}
+
+function renderSummary(){
+  // Expenses summary table
+  const expByMonth={};
+  expenses.forEach(e=>{
+    expByMonth[e.month] = expByMonth[e.month] || [];
+    expByMonth[e.month].push(e);
+  });
+  let expHtml="<table><tr><th>Month-Year</th><th>Expenses</th><th>Total</th></tr>";
+  for(let m in expByMonth){
+    let total=0;
+    let items=expByMonth[m].map(ex=>{total+=ex.amount; return `${ex.name} (${ex.amount})`;}).join(", ");
+    expHtml+=`<tr><td>${m}</td><td>${items}</td><td>₹${total}</td></tr>`;
+  }
+  expHtml+="</table>";
+  document.getElementById("expenseSummary").innerHTML=expHtml;
+
+  // Income summary table
+  const incByMonth={};
+  incomes.forEach(i=>{incByMonth[i.month]=(incByMonth[i.month]||0)+i.amount;});
+  let incHtml="<table><tr><th>Month-Year</th><th>Total Income</th></tr>";
+  for(let m in incByMonth){incHtml+=`<tr><td>${m}</td><td>₹${incByMonth[m]}</td></tr>`;}
+  incHtml+="</table>";
+  document.getElementById("incomeSummary").innerHTML=incHtml;
+}
+
+function renderChart(){
+  const ctx=document.getElementById("expenseChart").getContext("2d");
+  if(chart) chart.destroy();
+  const categories={};
+  expenses.forEach(e=>{categories[e.category]=(categories[e.category]||0)+e.amount;});
+  chart=new Chart(ctx,{
+    type: chartTypeSelect.value,
+    data:{
+      labels:Object.keys(categories),
+      datasets:[{label:"Expenses", data:Object.values(categories),
+      backgroundColor:["#ff6384","#36a2eb","#ffce56","#4caf50","#9966ff","#ff9f40"], borderColor:"#fff", borderWidth:2}]
+    },
+    options:{responsive:true, plugins:{datalabels:{color:"#fff"}}}
+  });
+}
+
+renderTable(); renderSummary(); renderChart();
+</script>
+</body>
+</html>
