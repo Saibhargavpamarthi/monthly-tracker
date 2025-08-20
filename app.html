@@ -9,7 +9,7 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  background-image: url('images/app.jpg');
+  background-image: url('app.jpg');
   background-size: cover;
   color: #fff;
   margin: 0;
@@ -71,9 +71,13 @@ tr:nth-child(even) { background: rgba(255,255,255,0.05); }
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 220px;
 }
-canvas { width: 100% !important; max-width: 250px !important; height: 180px !important; }
-@media (min-width: 600px) { canvas { max-width: 350px !important; height: 220px !important; } }
+canvas {
+  width: 100% !important;
+  max-width: 400px !important;
+  height: auto !important;
+}
 .delete-btn {
   background: crimson;
   color: white;
@@ -143,6 +147,17 @@ canvas { width: 100% !important; max-width: 250px !important; height: 180px !imp
     <tbody></tbody>
   </table>
 
+  <!-- Income Table -->
+  <h3>Income Table</h3>
+  <table id="incomeTable">
+    <thead>
+      <tr>
+        <th>Source</th><th>Amount</th><th>Month-Year</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <!-- Chart Type -->
   <h3>Visualize Data</h3>
   <select id="chartType">
@@ -159,6 +174,8 @@ canvas { width: 100% !important; max-width: 250px !important; height: 180px !imp
 </div>
 
 <script>
+Chart.register(ChartDataLabels);
+
 let incomes = JSON.parse(localStorage.getItem("incomes")) || [];
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 let chart;
@@ -167,39 +184,47 @@ const chartTypeSelect = document.getElementById("chartType");
 chartTypeSelect.addEventListener("change", renderChart);
 
 function addIncome(){
-  const name=document.getElementById("incomeName").value;
+  const name=document.getElementById("incomeName").value.trim();
   const amount=parseFloat(document.getElementById("incomeAmount").value);
   const month=document.getElementById("incomeMonth").value;
-  if(name && amount && month){
+  if(name && !isNaN(amount) && amount>0 && month){
     incomes.push({name, amount, month});
     localStorage.setItem("incomes", JSON.stringify(incomes));
     document.getElementById("incomeName").value="";
     document.getElementById("incomeAmount").value="";
     document.getElementById("incomeMonth").value="";
-  }
-  renderSummary(); renderChart();
+    renderIncomeTable();
+    renderSummary();
+    renderChart();
+  } else { alert("Please enter valid income details"); }
 }
 
 function addExpense(){
-  const name=document.getElementById("expenseName").value;
+  const name=document.getElementById("expenseName").value.trim();
   const amount=parseFloat(document.getElementById("expenseAmount").value);
   const category=document.getElementById("expenseCategory").value;
   const type=document.getElementById("expenseType").value;
   const month=document.getElementById("expenseMonth").value;
-  if(name && amount && month){
+  if(name && !isNaN(amount) && amount>0 && month){
     expenses.push({name, category, type, amount, month});
     localStorage.setItem("expenses", JSON.stringify(expenses));
     document.getElementById("expenseName").value="";
     document.getElementById("expenseAmount").value="";
     document.getElementById("expenseMonth").value="";
-  }
-  renderTable(); renderSummary(); renderChart();
+    renderTable(); renderSummary(); renderChart();
+  } else { alert("Please enter valid expense details"); }
 }
 
 function deleteExpense(index){
   expenses.splice(index,1);
   localStorage.setItem("expenses", JSON.stringify(expenses));
   renderTable(); renderSummary(); renderChart();
+}
+
+function deleteIncome(index){
+  incomes.splice(index,1);
+  localStorage.setItem("incomes", JSON.stringify(incomes));
+  renderIncomeTable(); renderSummary(); renderChart();
 }
 
 function renderTable(){
@@ -209,6 +234,17 @@ function renderTable(){
     tbody.innerHTML+=`<tr>
       <td>${e.name}</td><td>${e.category}</td><td>${e.type}</td><td>${e.amount}</td><td>${e.month}</td>
       <td><button class="delete-btn" onclick="deleteExpense(${i})">Delete</button></td>
+    </tr>`;
+  });
+}
+
+function renderIncomeTable(){
+  const tbody=document.querySelector("#incomeTable tbody");
+  tbody.innerHTML="";
+  incomes.forEach((i, idx)=>{
+    tbody.innerHTML+=`<tr>
+      <td>${i.name}</td><td>${i.amount}</td><td>${i.month}</td>
+      <td><button class="delete-btn" onclick="deleteIncome(${idx})">Delete</button></td>
     </tr>`;
   });
 }
@@ -254,7 +290,10 @@ function renderChart(){
   });
 }
 
-renderTable(); renderSummary(); renderChart();
+renderTable();
+renderIncomeTable();
+renderSummary();
+renderChart();
 </script>
 </body>
 </html>
