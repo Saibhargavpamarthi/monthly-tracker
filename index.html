@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pocket Manager | AI Master Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pocket Tracker | Zero-White Balanced</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,98 +13,120 @@
     
     <style>
         :root {
-            --glass: rgba(10, 15, 30, 0.98); --border: rgba(255, 255, 255, 0.1);
-            --green: #39ff14; --blue: #00f2ff; --red: #ff003c; --orange: #ff9f43;
-            --grad: linear-gradient(135deg, #00f2ff 0%, #a855f7 100%);
+            --glass: rgba(0, 0, 0, 0.85); 
+            --border: rgba(255, 255, 255, 0.08);
+            --cyan: #00e5ff;
+            --red: #ff3366;
+            --green: #39ff14;
+            --orange: #ff9f43;
+            --purple: #818cf8;
         }
 
-        * { box-sizing: border-box; outline: none; transition: 0.3s; }
-        body { font-family: 'Outfit', sans-serif; background: #010409; color: white; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-x: hidden; }
+        * { box-sizing: border-box; outline: none; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Outfit', sans-serif; background: #010409; color: #f0f0f0; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
-        .aurora { position: fixed; width: 100%; height: 100%; z-index: -1; overflow: hidden; }
-        .blob { position: absolute; width: 500px; height: 500px; filter: blur(100px); opacity: 0.15; border-radius: 50%; animation: move 15s infinite alternate; }
-        .b1 { background: var(--blue); top: -10%; left: -10%; }
-        .b2 { background: var(--purple); bottom: -10%; right: -10%; }
-        @keyframes move { from { transform: translate(0,0); } to { transform: translate(50px, 50px); } }
+        .aurora { position: fixed; width: 100%; height: 100%; z-index: -1; background: url('https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1920&q=80') center/cover; opacity: 0.6; }
 
-        #screen-auth, #screen-dash { width: 420px; padding: 30px; border-radius: 30px; background: var(--glass); border: 1.5px solid var(--border); backdrop-filter: blur(50px); display: none; box-shadow: 0 0 50px rgba(0,0,0,1); position: relative; z-index: 10; }
+        #screen-auth, #screen-dash { 
+            width: 92%; max-width: 420px; max-height: 94vh; padding: 30px 25px; 
+            border-radius: 25px; background: var(--glass); border: 1.5px solid var(--border); 
+            backdrop-filter: blur(40px); display: none; box-shadow: 0 0 60px rgba(0,0,0,1); 
+            position: relative; z-index: 10; overflow-y: auto; scrollbar-width: none; 
+        }
 
-        /* PRECISION ROW BUBBLES */
-        .row-bubble { position: absolute; inset: 0; background: #000; border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 12px; z-index: 20; border: 1.5px solid var(--blue); animation: pop 0.3s ease-out; }
-        .row-bubble.del-bubble { border-color: var(--red); }
-        .row-bubble button { background: transparent; border: none; font-weight: 900; font-size: 0.75rem; cursor: pointer; color: white; }
-        .row-bubble input { width: 80px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 5px; border-radius: 5px; text-align: center; }
-        
-        /* LIMIT PILL */
-        .limit-pill { position: absolute; top: -35px; right: 0; background: var(--blue); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 900; box-shadow: 0 0 15px var(--blue); transition: 0.5s; }
-        .limit-pill.exceeded { background: var(--red); color: white; box-shadow: 0 0 20px var(--red); }
+        /* BRANDING */
+        .brand-logo { text-align: center; font-size: 2.2rem; font-weight: 900; margin-bottom: 5px; }
+        .p-text { color: var(--orange); } .t-text { color: var(--purple); }
+        .sub-text { text-align: center; font-size: 0.7rem; color: var(--orange); margin-bottom: 25px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
 
-        @keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        /* NO WHITE INPUTS */
+        input, select { 
+            width: 100%; padding: 14px; border-radius: 12px; 
+            background: rgba(255,255,255,0.04); /* Transparent box */
+            border: 1px solid var(--border); 
+            color: var(--cyan); 
+            font-family: 'Outfit'; font-weight: 600; font-size: 16px; margin-bottom: 12px; 
+        }
+        input::placeholder { color: rgba(255,255,255,0.15); }
+        select option { background: #000; color: var(--cyan); }
 
-        .stat-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 15px; border: 1px solid var(--border); }
-        .toggle-btn { flex: 1; padding: 10px; font-size: 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: #000; color: #888; cursor: pointer; }
-        .toggle-btn.active { border-color: var(--blue); color: var(--blue); }
-        
-        .limit-box { position: relative; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 15px; border-left: 5px solid var(--green); margin: 30px 0 15px 0; }
-        .limit-bar { height: 8px; background: #111; border-radius: 4px; overflow: hidden; margin-top: 8px; }
-        #limit-fill { height: 100%; width: 0%; background: var(--green); transition: 1s; }
+        .btn-vibrant { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #007bff; color: #fff; font-weight: 900; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 10px; }
+        .btn-vibrant.alt { background: rgba(0,123,255,0.05); border: 1px solid #007bff; color: #007bff; }
 
-        input, select { width: 100%; padding: 12px; border-radius: 12px; background: #000; border: 1.5px solid var(--border); color: white; margin-bottom: 10px; }
-        .btn-main { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--red); color: white; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        /* DASHBOARD COMPONENTS */
+        .stat-card { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); margin-bottom: 15px; }
+        .toggle-btn { flex: 1; padding: 12px; font-size: 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: #000; color: #555; cursor: pointer; }
+        .toggle-btn.active { border-color: var(--cyan); color: var(--cyan); }
 
-        .list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; scrollbar-width: none; }
-        .list li { position: relative; background: rgba(255,255,255,0.03); margin-bottom: 8px; padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid transparent; }
+        .limit-box { position: relative; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 15px; border-left: 5px solid var(--green); margin: 35px 0 20px 0; }
+        .limit-pill { position: absolute; top: -35px; right: 0; background: var(--cyan); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; box-shadow: 0 0 15px var(--cyan); }
+
+        /* BUBBLE UI */
+        .row-bubble { position: absolute; inset: 0; background: rgba(0,0,0,0.98); border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; z-index: 20; border: 1.5px solid var(--cyan); }
+        .row-bubble button { background: transparent; border: none; font-weight: 900; font-size: 0.8rem; cursor: pointer; color: #fff; text-transform: uppercase; }
+
+        /* LIST */
+        .list li { position: relative; background: rgba(255,255,255,0.02); margin-bottom: 8px; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
 
         /* BOT WINDOW */
-        #chat-window { position: fixed; bottom: 100px; right: 20px; width: 340px; height: 420px; background: #000; border-radius: 30px; display: none; flex-direction: column; border: 1.5px solid var(--border); z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.9); overflow: hidden; }
-        .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; }
-        .bot-msg { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 15px 15px 15px 0; align-self: flex-start; }
-        .user-msg { background: var(--grad); color: black; font-weight: 600; padding: 10px; border-radius: 15px 15px 0 15px; align-self: flex-end; }
-        #chat-trigger { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--grad); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000; box-shadow: 0 0 20px rgba(0,242,255,0.5); }
+        #chat-window { position: fixed; bottom: 85px; right: 20px; width: min(340px, 90vw); height: 420px; background: rgba(0,0,0,0.98); border-radius: 25px; display: none; flex-direction: column; border: 1px solid var(--border); z-index: 1000; overflow: hidden; }
+        #chat-trigger { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000; box-shadow: 0 0 20px rgba(0,123,255,0.4); }
     </style>
 </head>
 <body>
 
-    <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div></div>
+    <div class="aurora"></div>
 
     <div id="screen-auth">
-        <h2 style="text-align: center; font-weight: 900; color: var(--blue);">Pocket Manager</h2>
+        <div class="brand-logo"><span class="p-text">Pocket</span> <span class="t-text">Tracker</span></div>
+        <p class="sub-text">Your Monthly Friend</p>
         <form onsubmit="event.preventDefault(); handleAuth();">
             <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit" class="btn-main" style="background: var(--grad)">OPEN HUB</button>
+            <div style="position:relative">
+                <input type="password" id="password" placeholder="Enter Password" required>
+                <i class="fas fa-eye" onclick="togglePass(this)" style="position:absolute; right:15px; top:18px; color:rgba(255,255,255,0.1); cursor:pointer"></i>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.75rem; color:#555; margin-bottom:20px; cursor:pointer">
+                <input type="checkbox" id="remember-me" style="width:auto; margin:0"> Remember Me
+            </label>
+            <button type="submit" class="btn-vibrant">Login</button>
+            <button type="button" class="btn-vibrant alt" onclick="alert('Account creation hub ready...')">Create Account</button>
         </form>
     </div>
 
     <div id="screen-dash">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div style="display:flex; align-items:center; gap:10px;" onclick="document.getElementById('pfp-upload').click()">
-                <img id="profile-img-preview" src="https://via.placeholder.com/150" style="width:35px; height:35px; border-radius:50%; border:2px solid var(--blue); object-fit:cover;">
-                <span id="pfp-user-name" style="font-weight: 900; font-size: 0.8rem; color:var(--blue)">User</span>
+            <div style="display:flex; align-items:center; gap:12px;" onclick="document.getElementById('pfp-upload').click()">
+                <img id="profile-img-preview" src="https://via.placeholder.com/150" style="width:38px; height:38px; border-radius:50%; border:2px solid var(--cyan); object-fit:cover;">
+                <span id="pfp-user-name" style="font-weight: 900; font-size: 0.85rem; color:var(--cyan)">User</span>
                 <input type="file" id="pfp-upload" style="display:none" onchange="saveProfilePic(event)">
             </div>
             <span onclick="logout()" style="color: var(--red); font-weight: 900; font-size: 0.75rem; cursor:pointer;">LOGOUT</span>
         </div>
 
-        <div class="stat-card"><h1 id="balance" style="font-size: 2.2rem; margin: 0; color: var(--blue);">₹0.00</h1></div>
-
-        <div class="graph-toggles" style="display: flex; gap: 5px; margin-bottom: 10px;">
-            <button class="toggle-btn active" onclick="setChartType('doughnut')">PIE</button>
-            <button class="toggle-btn" onclick="setChartType('line')">TREND</button>
-            <button class="toggle-btn" onclick="setChartType('bar')">GOAL</button>
+        <div class="stat-card">
+            <h1 id="balance" style="font-size: 2.6rem; margin: 0; color: var(--cyan); text-shadow: 0 0 15px rgba(0,229,255,0.3);">₹0.00</h1>
         </div>
-        <div style="height: 110px; margin-bottom: 15px;"><canvas id="masterChart"></canvas></div>
+
+        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <button class="toggle-btn active" style="flex:1" onclick="setChartType('doughnut')">PIE</button>
+            <button class="toggle-btn" style="flex:1" onclick="setChartType('line')">TREND</button>
+            <button class="toggle-btn" style="flex:1" onclick="setChartType('bar')">GOAL</button>
+        </div>
+        <div style="height: 120px; margin-bottom: 15px;"><canvas id="masterChart"></canvas></div>
 
         <div class="limit-box">
             <div id="limit-pill" class="limit-pill">0%</div>
             <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 900;">
-                <span>DAILY LIMIT <i class="fas fa-edit" onclick="editDailyLimit()" style="color:var(--blue); cursor:pointer"></i></span>
-                <span id="limit-text">₹0 / ₹2000</span>
+                <span style="color:#888">DAILY LIMIT <i class="fas fa-edit" onclick="editDailyLimit()" style="color:var(--cyan); cursor:pointer"></i></span>
+                <span id="limit-text" style="color:#888">₹0 / ₹2000</span>
             </div>
-            <div class="limit-bar"><div id="limit-fill"></div></div>
+            <div style="height:10px; background:#000; border-radius:5px; overflow:hidden; margin-top:8px;">
+                <div id="limit-fill" style="height:100%; width:0%; background:var(--green); transition:1s;"></div>
+            </div>
         </div>
 
-        <form id="trans-form" onsubmit="event.preventDefault(); submitEntry();">
+        <form onsubmit="event.preventDefault(); submitEntry();">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <select id="cat-select" required>
                     <option value="Food">🍔 Food</option><option value="Salary">💰 Salary</option>
@@ -115,53 +137,55 @@
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="date" id="date-input">
-                <select id="type-select" onchange="updateBtnColor()">
+                <select id="type-select" onchange="updateExecBtn()">
                     <option value="expense">Expense (-)</option>
                     <option value="income">Income (+)</option>
                 </select>
             </div>
-            <button type="submit" id="exec-btn" class="btn-main">EXECUTE 💸</button>
+            <button type="submit" id="exec-btn" class="btn-vibrant" style="background:var(--red); color:#fff">Execute 💸</button>
         </form>
 
-        <ul id="list" class="list" style="margin-top:15px;"></ul>
-        <button onclick="generatePDF()" class="btn-main" style="margin-top: 15px; background: rgba(0, 242, 255, 0.1); color: var(--blue); border: 1.5px solid var(--blue); padding: 12px; font-size: 0.75rem;">EXPORT PDF</button>
+        <ul id="list" style="list-style:none; padding:0; margin-top:15px;"></ul>
+        <button onclick="generatePDF()" class="btn-vibrant alt" style="padding: 12px; font-size: 0.75rem; margin-top:15px">Download PDF</button>
     </div>
 
     <div id="chat-window">
-        <div style="background: var(--grad); padding: 15px; font-weight: 900; color: black; display: flex; justify-content: space-between;">
-            <span>🤖 AI ADMIN HUB</span>
-            <i class="fas fa-times" onclick="toggleChat()" style="cursor:pointer"></i>
-        </div>
-        <div class="chat-body" id="chat-body"></div>
-        <form style="padding: 10px; display: flex; background: #111;" onsubmit="event.preventDefault(); askBot();">
-            <input type="text" id="chat-input" placeholder="Edit Food, Delete Salary..." style="width:100%; margin:0; border-radius:20px;">
-            <button type="submit" style="background:var(--blue); border:none; padding:10px 15px; border-radius:50%; margin-left:10px; color:black;"><i class="fas fa-paper-plane"></i></button>
+        <div style="background: #007bff; padding: 15px; font-weight: 900; display: flex; justify-content: space-between;"><span>🤖 AI ADMIN</span><i class="fas fa-times" onclick="toggleChat()" style="cursor:pointer"></i></div>
+        <div id="chat-body" style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:0.85rem;"></div>
+        <form style="padding: 10px; display: flex; background: #010409;" onsubmit="event.preventDefault(); askBot();">
+            <input type="text" id="chat-input" placeholder="Add Salary 5000..." style="margin:0; border-radius:20px; background:#000; color:var(--cyan)">
+            <button type="submit" style="background:#007bff; border:none; padding:10px; border-radius:50%; margin-left:10px; color:#000;"><i class="fas fa-paper-plane"></i></button>
         </form>
     </div>
-    <div id="chat-trigger" onclick="toggleChat()"><i class="fas fa-robot" style="color:white; font-size:1.6rem;"></i></div>
+    <div id="chat-trigger" onclick="toggleChat()"><i class="fas fa-robot" style="color:#000; font-size:1.6rem;"></i></div>
 
     <script>
         let userData = [], currentUser = null, dailyLimit = 2000, myChart = null, chartType = 'doughnut';
         let botMemory = { stage: 'idle', data: {} };
         const emojis = { Food: '🍔', Rent: '🏠', Salary: '💰', Shopping: '🛍️', Others: '📄' };
 
-        const getUsers = () => JSON.parse(localStorage.getItem('sai_vmaster_v1')) || {};
-        const saveUsers = (u) => localStorage.setItem('sai_vmaster_v1', JSON.stringify(u));
+        const getUsers = () => JSON.parse(localStorage.getItem('sai_final_stealth_v1')) || {};
+        const saveUsers = (u) => localStorage.setItem('sai_final_stealth_v1', JSON.stringify(u));
+
+        function togglePass(icon) {
+            const p = document.getElementById('password'); p.type = p.type === 'password' ? 'text' : 'password';
+            icon.style.color = p.type === 'text' ? 'var(--cyan)' : 'rgba(255,255,255,0.1)';
+        }
 
         function handleAuth() {
-            const u = document.getElementById('username').value.trim().toLowerCase(), p = document.getElementById('password').value, users = getUsers();
-            if(!u || !p) return;
+            const u = document.getElementById('username').value.trim().toLowerCase(), p = document.getElementById('password').value;
+            const rem = document.getElementById('remember-me').checked, users = getUsers();
             if(!users[u]) users[u] = { password: p, data: [], limit: 2000, pfp: '' };
-            if(users[u].password === p) startSession(u); else alert("Wrong Password");
+            if(users[u].password === p) { if(rem) localStorage.setItem('remember_user', u); startSession(u); saveUsers(users); } 
+            else alert("Denied");
         }
 
         function startSession(u) {
-            currentUser = u; sessionStorage.setItem('user_active', u); sessionStorage.setItem('login_time', Date.now());
+            currentUser = u; sessionStorage.setItem('user_active', u);
             document.getElementById('screen-auth').style.display = 'none';
             document.getElementById('screen-dash').style.display = 'block';
             document.getElementById('date-input').valueAsDate = new Date();
             loadData();
-            setTimeout(() => { appendMsg('bot', `Vault active, ${currentUser}! I can Add, Edit, or Delete anything.`); }, 600);
         }
 
         function loadData() { 
@@ -178,30 +202,27 @@
             userData.forEach(t => {
                 bal += t.amt; if(t.date === today && t.amt < 0) todayExp += Math.abs(t.amt);
                 const li = document.createElement('li'); li.id = `row-${t.id}`;
-                const isInc = t.amt > 0;
-                li.style.borderLeftColor = isInc ? 'var(--blue)' : 'var(--red)';
-                const dateStr = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                li.innerHTML = `<div><span style="font-size:0.6rem; color:#666; font-weight:800">${dateStr}</span><br><span>${emojis[t.cat] || '📄'} ${t.cat}</span></div> 
-                    <div class="actions">
-                        <strong style="color:${isInc ? 'var(--blue)' : 'var(--red)'}">₹${Math.abs(t.amt)}</strong>
-                        <i class="fas fa-edit" onclick="spawnEdit(${t.id})" style="color:var(--blue)"></i>
-                        <i class="fas fa-trash" onclick="spawnDel(${t.id})" style="color:var(--red)"></i>
+                li.style.cssText = `position:relative; background:rgba(255,255,255,0.02); margin-bottom:8px; padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; border-left: 4px solid ${t.amt > 0 ? 'var(--cyan)' : 'var(--red)'}; border-right: 1px solid var(--border); border-top: 1px solid var(--border);`;
+                li.innerHTML = `<div><span style="font-size:0.6rem; color:#555; font-weight:800">${new Date(t.date).toLocaleDateString()}</span><br><span style="color:var(--cyan)">${emojis[t.cat] || '📄'} ${t.cat}</span></div> 
+                    <div style="display:flex; gap:12px; opacity:0.8">
+                        <strong style="color:${t.amt > 0 ? 'var(--cyan)' : 'var(--red)'}">₹${Math.abs(t.amt)}</strong>
+                        <i class="fas fa-edit" onclick="spawnEditBubble(${t.id})" style="color:var(--cyan); cursor:pointer"></i>
+                        <i class="fas fa-trash" onclick="spawnDeleteBubble(${t.id})" style="color:var(--red); cursor:pointer"></i>
                     </div>`;
                 list.prepend(li);
             });
             document.getElementById('balance').innerText = `₹${bal.toFixed(2)}`;
             const perc = Math.round((todayExp / dailyLimit) * 100);
             const pill = document.getElementById('limit-pill');
+            pill.innerText = perc + '%';
             document.getElementById('limit-fill').style.width = Math.min(perc, 100) + '%';
             document.getElementById('limit-text').innerText = `₹${todayExp} / ₹${dailyLimit}`;
-            pill.innerText = perc + '%';
-            if(perc >= 100) { pill.classList.add('exceeded'); pill.innerText = perc + '% EXCEEDED'; } else pill.classList.remove('exceeded');
+            if(perc >= 100) pill.style.background = 'var(--red)'; else pill.style.background = 'var(--cyan)';
             const users = getUsers(); users[currentUser].data = userData; users[currentUser].limit = dailyLimit; saveUsers(users); renderChart();
         }
 
-        /* CONTEXTUAL BUBBLES */
-        function spawnDel(id) { updateUI(); const li = document.getElementById(`row-${id}`); const b = document.createElement('div'); b.className = 'row-bubble del-bubble'; b.innerHTML = `<span>Delete?</span><button style="color:var(--green)" onclick="confirmDel(${id})">YES</button><button style="color:var(--red)" onclick="updateUI()">NO</button>`; li.appendChild(b); }
-        function spawnEdit(id) { updateUI(); const li = document.getElementById(`row-${id}`); const item = userData.find(t=>t.id===id); const b = document.createElement('div'); b.className = 'row-bubble'; b.innerHTML = `<input type="number" id="inp-${id}" value="${Math.abs(item.amt)}"><button style="color:var(--blue)" onclick="confirmEd(${id})">SAVE</button><button style="color:var(--red)" onclick="updateUI()">X</button>`; li.appendChild(b); }
+        function spawnDeleteBubble(id) { updateUI(); const li = document.getElementById(`row-${id}`); const b = document.createElement('div'); b.className = 'row-bubble'; b.style.borderColor = 'var(--red)'; b.innerHTML = `<span>Delete?</span><button style="color:var(--green)" onclick="confirmDel(${id})">YES</button><button style="color:var(--red)" onclick="updateUI()">NO</button>`; li.appendChild(b); }
+        function spawnEditBubble(id) { updateUI(); const li = document.getElementById(`row-${id}`); const item = userData.find(t=>t.id===id); const b = document.createElement('div'); b.className = 'row-bubble'; b.innerHTML = `<input type="number" id="inp-${id}" value="${Math.abs(item.amt)}"><button style="color:var(--cyan)" onclick="confirmEd(${id})">SAVE</button>`; li.appendChild(b); }
         function confirmDel(id) { userData = userData.filter(t=>t.id!==id); updateUI(); }
         function confirmEd(id) { const v = document.getElementById(`inp-${id}`).value; const item = userData.find(t=>t.id===id); if(v){ item.amt = item.amt < 0 ? -parseFloat(v) : parseFloat(v); updateUI(); } }
 
@@ -212,39 +233,35 @@
                 let res = ""; const matchedCat = Object.keys(emojis).find(cat => q.includes(cat.toLowerCase()));
                 if(q.includes('delete') && matchedCat) {
                     const idx = userData.map(t=>t.cat.toLowerCase()).lastIndexOf(matchedCat.toLowerCase());
-                    if(idx > -1) { userData.splice(idx, 1); updateUI(); res = `Deleted last ${matchedCat} entry.`; } else res = "Not found.";
-                } else if(q.includes('edit') && matchedCat) {
-                    const val = parseFloat(q.match(/\d+/));
-                    const idx = userData.map(t=>t.cat.toLowerCase()).lastIndexOf(matchedCat.toLowerCase());
-                    if(idx > -1 && !isNaN(val)) { userData[idx].amt = userData[idx].amt < 0 ? -val : val; updateUI(); res = `Updated ${matchedCat} to ₹${val}.`; }
-                    else res = "Provide a number (e.g. 'Edit Food to 500').";
+                    if(idx > -1) { userData.splice(idx, 1); updateUI(); res = `Deleted ${matchedCat}.`; }
                 } else if(matchedCat) {
-                    botMemory.data.cat = matchedCat; botMemory.stage = 'amt'; res = `Logging ${matchedCat}. Amount?`;
+                    botMemory.data.cat = matchedCat; botMemory.stage = 'amt'; res = `Amount for ${matchedCat}?`;
                 } else if(botMemory.stage === 'amt') {
-                    const v = parseFloat(q); if(!isNaN(v)) { userData.push({ id: Date.now(), cat: botMemory.data.cat, amt: (botMemory.data.cat==='Salary'?v:-v), date: new Date().toISOString().split('T')[0] }); updateUI(); res = "Logged! Add more?"; botMemory.stage = 'end'; }
-                } else res = "I can Add, Edit, or Delete items precisely.";
+                    const v = parseFloat(q); userData.push({ id: Date.now(), cat: botMemory.data.cat, amt: (botMemory.data.cat==='Salary'?v:-v), date: new Date().toISOString().split('T')[0] });
+                    updateUI(); res = "Logged! More?"; botMemory.stage = 'idle';
+                } else res = "I execute Add, Edit, or Delete commands instantly.";
                 appendMsg('bot', res);
             }, 600);
         }
 
-        function appendMsg(type, m) { const b = document.getElementById('chat-body'); b.innerHTML += `<div class="${type}-msg">${m}</div>`; b.scrollTop = b.scrollHeight; }
+        function appendMsg(type, m) { const b = document.getElementById('chat-body'); b.innerHTML += `<div style="background:${type==='user'?'#007bff':'rgba(255,255,255,0.02)'}; padding:8px; border-radius:10px; align-self:${type==='user'?'flex-end':'flex-start'}; color:var(--cyan)">${m}</div>`; b.scrollTop = b.scrollHeight; }
         function toggleChat() { const w = document.getElementById('chat-window'); w.style.display = (w.style.display === 'flex' ? 'none' : 'flex'); }
-        function updateBtnColor() { document.getElementById('exec-btn').style.background = (document.getElementById('type-select').value === 'income' ? 'var(--blue)' : 'var(--red)'); }
+        function updateExecBtn() { document.getElementById('exec-btn').style.background = (document.getElementById('type-select').value === 'income' ? '#007bff' : 'var(--red)'); }
         function renderChart() {
             const ctx = document.getElementById('masterChart').getContext('2d'); if(myChart) myChart.destroy();
             const today = new Date().toISOString().split('T')[0];
             const tSpent = userData.filter(t=>t.date===today && t.amt < 0).reduce((a,b)=>a+Math.abs(b.amt),0);
-            if(chartType === 'bar') myChart = new Chart(ctx, { type: 'bar', data: { labels: ['Spent', 'Goal'], datasets: [{ data: [tSpent, dailyLimit], backgroundColor: [tSpent > dailyLimit ? '#ff003c' : '#00f2ff', '#39ff14'], borderRadius: 10 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            else if(chartType === 'line') { const exps = userData.filter(t=>t.amt<0).slice(-5); myChart = new Chart(ctx, { type: 'line', data: { labels: exps.map((_,i)=>i+1), datasets: [{ data: exps.map(t=>Math.abs(t.amt)), borderColor: '#00f2ff', fill: true, backgroundColor:'rgba(0, 242, 255, 0.1)', tension: 0.4 }] }, options: { maintainAspectRatio: false, scales: { x:{display:false}, y:{display:false} } } }); }
-            else { const catStats = {}; userData.filter(t=>t.amt<0).forEach(t=>catStats[t.cat] = (catStats[t.cat] || 0) + Math.abs(t.amt)); myChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(catStats), datasets: [{ data: Object.values(catStats), backgroundColor: ['#00f2ff','#ff003c','#39ff14','#c084fc','#ff9f43'], borderColor: '#000' }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } }); }
+            if(chartType === 'bar') myChart = new Chart(ctx, { type: 'bar', data: { labels: ['Spent', 'Goal'], datasets: [{ data: [tSpent, dailyLimit], backgroundColor: [tSpent > dailyLimit ? '#ff3366' : '#00e5ff', '#39ff14'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            else if(chartType === 'line') myChart = new Chart(ctx, { type: 'line', data: { labels: [1,2,3,4,5], datasets: [{ data: userData.filter(t=>t.amt<0).slice(-5).map(t=>Math.abs(t.amt)), borderColor: '#00e5ff', fill: true, backgroundColor:'rgba(0, 229, 255, 0.1)', tension: 0.4 }] }, options: { maintainAspectRatio: false, scales: { x:{display:false}, y:{display:false} } } });
+            else { const catStats = {}; userData.filter(t=>t.amt<0).forEach(t=>catStats[t.cat] = (catStats[t.cat] || 0) + Math.abs(t.amt)); myChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(catStats), datasets: [{ data: Object.values(catStats), backgroundColor: ['#00e5ff','#ff3366','#39ff14','#818cf8','#ff9f43'], borderColor: '#000' }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } }); }
         }
         function submitEntry() { const c = document.getElementById('cat-select').value, a = parseFloat(document.getElementById('amt').value), t = document.getElementById('type-select').value, d = document.getElementById('date-input').value; if(!c || isNaN(a)) return; userData.push({ id: Date.now(), cat: c, amt: (t==='income'?a:-a), date: d }); updateUI(); }
-        function logout() { sessionStorage.clear(); location.reload(); }
-        function setChartType(t) { chartType = t; document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); renderChart(); }
+        function logout() { localStorage.removeItem('remember_user'); sessionStorage.clear(); location.reload(); }
+        function setChartType(t) { chartType = t; renderChart(); }
         function saveProfilePic(e) { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => { document.getElementById('profile-img-preview').src = ev.target.result; const u = getUsers(); u[currentUser].pfp = ev.target.result; saveUsers(u); }; r.readAsDataURL(f); } }
         function generatePDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text(`FINANCIAL REPORT: ${currentUser}`, 20, 20); doc.autoTable({ startY: 30, head: [['Date', 'Category', 'Amount']], body: userData.map(t => [t.date, t.cat, t.amt]) }); doc.save('Report.pdf'); }
         function editDailyLimit() { const v = prompt("New Goal:", dailyLimit); if(v) { dailyLimit = parseFloat(v); updateUI(); } }
-        window.onload = () => { if(sessionStorage.getItem('user_active')) startSession(sessionStorage.getItem('user_active')); else document.getElementById('screen-auth').style.display = 'block'; }
+        window.onload = () => { if(localStorage.getItem('remember_user')) startSession(localStorage.getItem('remember_user')); else if(sessionStorage.getItem('user_active')) startSession(sessionStorage.getItem('user_active')); else document.getElementById('screen-auth').style.display = 'block'; }
     </script>
 </body>
 </html>
